@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CineWorld - Movie Recommendations</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #0a1016;
+            color: #ffffff;
+        }
+        
+        header {
+            background-color: #1a1f29;
+            padding: 1.5rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .site-title {
+            color: #e50914;
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+        
+        .search-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            justify-content: center;
+        }
+        
+        .search-box {
+            flex: 1;
+            min-width: 250px;
+        }
+        
+        .search-box input {
+            width: 100%;
+            padding: 0.8rem;
+            border-radius: 4px;
+            border: none;
+            background-color: #2c3440;
+            color: white;
+            font-size: 1rem;
+        }
+        
+        .filter-box {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        select {
+            padding: 0.8rem;
+            border-radius: 4px;
+            border: none;
+            background-color: #2c3440;
+            color: white;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+        
+        .main-container {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+        
+        .movies-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        .movie-card {
+            background-color: #1a1f29;
+            border-radius: 8px;
+            overflow: hidden;
+            transition: transform 0.3s, box-shadow 0.3s;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            cursor: pointer;
+        }
+        
+        .movie-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 16px rgba(0, 0, 0, 0.4);
+        }
+        
+        .movie-poster {
+            width: 100%;
+            height: 300px;
+            object-fit: cover;
+            background-size: cover;
+            background-position: center;
+        }
+        
+        .movie-info {
+            padding: 1rem;
+        }
+        
+        .movie-title {
+            font-size: 1rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+        
+        .movie-details {
+            display: flex;
+            justify-content: space-between;
+            color: #aaa;
+            font-size: 0.85rem;
+        }
+        
+        .no-results {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 3rem;
+            font-size: 1.2rem;
+            color: #aaa;
+        }
+        
+        .rating {
+            color: #ffd700;
+            font-weight: bold;
+        }
+        
+        footer {
+            background-color: #1a1f29;
+            text-align: center;
+            padding: 1.5rem;
+            margin-top: 2rem;
+            color: #aaa;
+        }
+        
+        .fallback-poster {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            text-align: center;
+            padding: 10px;
+            height: 100%;
+            background-color: #2c3440;
+        }
+        
+        @media (max-width: 600px) {
+            .search-container {
+                flex-direction: column;
+            }
+            
+            .movies-container {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1 class="site-title">CineWorld</h1>
+        <div class="search-container">
+            <div class="search-box">
+                <input type="text" id="search-input" placeholder="Search for movies...">
+            </div>
+            <div class="filter-box">
+                <select id="genre-filter">
+                    <option value="all">All Genres</option>
+                    <option value="action">Action</option>
+                    <option value="comedy">Comedy</option>
+                    <option value="drama">Drama</option>
+                    <option value="romance">Romance</option>
+                    <option value="thriller">Thriller</option>
+                    <option value="sci-fi">Sci-Fi</option>
+                </select>
+                <select id="industry-filter">
+                    <option value="all">All Industries</option>
+                    <option value="hollywood">Hollywood</option>
+                    <option value="bollywood">Bollywood</option>
+                </select>
+            </div>
+        </div>
+    </header>
+    
+    <div class="main-container">
+        <div class="movies-container" id="movies-grid">
+            <!-- Movies will be populated here by JavaScript -->
+        </div>
+    </div>
+    
+    <footer>
+        <p>© 2025 CineWorld - Your Ultimate Movie Recommendation Website</p>
+    </footer>
+    
+    <script>
+        // Movie database with 10 Hollywood and 20 Bollywood movies
+        const moviesData = [
+            // Hollywood Movies
+            {
+                id: 1,
+                title: "Inception",
+                year: 2010,
+                genre: "sci-fi",
+                industry: "hollywood",
+                rating: 8.8,
+                poster: "https://m.media-amazon.com/images/M/MV5BMjAxMzY3NjcxNF5BMl5BanBnXkFtZTcwNTI5OTM0Mw@@._V1_FMjpg_UX1000_.jpg"
+            },
+            {
+                id: 2,
+                title: "The Dark Knight",
+                year: 2008,
+                genre: "action",
+                industry: "hollywood",
+                rating: 9.0,
+                poster: "https://m.media-amazon.com/images/M/MV5BMTMxNTMwODM0NF5BMl5BanBnXkFtZTcwODAyMTk2Mw@@._V1_.jpg"
+            },
+            {
+                id: 3,
+                title: "Pulp Fiction",
+                year: 1994,
+                genre: "thriller",
+                industry: "hollywood",
+                rating: 8.9,
+                poster: "https://m.media-amazon.com/images/M/MV5BNGNhMDIzZTUtNTBlZi00MTRlLWFjM2ItYzViMjE3YzI5MjljXkEyXkFqcGdeQXVyNzkwMjQ5NzM@._V1_.jpg"
+            },
+            {
+                id: 4,
+                title: "The Shawshank Redemption",
+                year: 1994,
+                genre: "drama",
+                industry: "hollywood",
+                rating: 9.3,
+                poster: "https://m.media-amazon.com/images/M/MV5BNDE3ODcxYzMtY2YzZC00NmNlLWJiNDMtZDViZWM2MzIxZDYwXkEyXkFqcGdeQXVyNjAwNDUxODI@._V1_FMjpg_UX1000_.jpg"
+            },
+            {
+                id: 5,
+                title: "Forrest Gump",
+                year: 1994,
+                genre: "drama",
+                industry: "hollywood",
+                rating: 8.8,
+                poster: "https://m.media-amazon.com/images/M/MV5BNWIwODRlZTUtY2U3ZS00Yzg1LWJhNzYtMmZiYmEyNmU1NjMzXkEyXkFqcGdeQXVyMTQxNzMzNDI@._V1_.jpg"
+            },
+            {
+                id: 6,
+                title: "The Matrix",
+                year: 1999,
+                genre: "sci-fi",
+                industry: "hollywood",
+                rating: 8.7,
+                poster: "https://m.media-amazon.com/images/M/MV5BNzQzOTk3OTAtNDQ0Zi00ZTVkLWI0MTEtMDllZjNkYzNjNTc4L2ltYWdlXkEyXkFqcGdeQXVyNjU0OTQ0OTY@._V1_.jpg"
+            },
+            {
+                id: 7,
+                title: "Titanic",
+                year: 1997,
+                genre: "romance",
+                industry: "hollywood",
+                rating: 7.9,
+                poster: "https://m.media-amazon.com/images/M/MV5BMDdmZGU3NDQtY2E5My00ZTliLWIzOTUtMTY4ZGI1YjdiNjk3XkEyXkFqcGdeQXVyNTA4NzY1MzY@._V1_FMjpg_UX1000_.jpg"
+            },
+            {
+                id: 8,
+                title: "Jurassic Park",
+                year: 1993,
+                genre: "sci-fi",
+                industry: "hollywood",
+                rating: 8.2,
+                poster: "https://m.media-amazon.com/images/M/MV5BMjM2MDgxMDg0Nl5BMl5BanBnXkFtZTgwNTM2OTM5NDE@._V1_.jpg"
+            },
+            {
+                id: 9,
+                title: "The Hangover",
+                year: 2009,
+                genre: "comedy",
+                industry: "hollywood",
+                rating: 7.7,
+                poster: "https://m.media-amazon.com/images/M/MV5BNGQwZjg5YmYtY2VkNC00NzliLTljYTctNzI5NmU3MjE2ODQzXkEyXkFqcGdeQXVyNzkwMjQ5NzM@._V1_FMjpg_UX1000_.jpg"
+            },
+            {
+                id: 10,
+                title: "Interstellar",
+                year: 2014,
+                genre: "sci-fi",
+                industry: "hollywood",
+                rating: 8.6,
+                poster: "https://m.media-amazon.com/images/M/MV5BZjdkOTU3MDktN2IxOS00OGEyLWFmMjktY2FiMmZkNWIyODZiXkEyXkFqcGdeQXVyMTMxODk2OTU@._V1_.jpg"
+            },
+            
+            // Bollywood Movies
+            {
+                id: 11,
+                title: "Dilwale Dulhania Le Jayenge",
+                year: 1995,
+                genre: "romance",
+                industry: "bollywood",
+                rating: 8.1,
+                poster: "https://m.media-amazon.com/images/M/MV5BMTQ0NjUzMDMyOF5BMl5BanBnXkFtZTgwNzA2MTgwMzE@._V1_.jpg"
+            },
+            {
+                id: 12,
+                title: "3 Idiots",
+                year: 2009,
+                genre: "comedy",
+                industry: "bollywood",
+                rating: 8.4,
+                poster: "https://m.media-amazon.com/images/M/MV5BNTkyOGVjMGEtNmQzZi00NzFlLTlhOWQtODYyMDc2ZGJmYzFhXkEyXkFqcGdeQXVyNjU0OTQ0OTY@._V1_.jpg"
+            },
+            {
+                id: 13,
+                title: "Lagaan",
+                year: 2001,
+                genre: "drama",
+                industry: "bollywood",
+                rating: 8.1,
+                poster: "https://m.media-amazon.com/images/M/MV5BNDYxNWUzZmYtOGQxMC00MTdkLTkxOTctYzkyOGIwNWQxZjhmXkEyXkFqcGdeQXVyNjU0OTQ0OTY@._V1_.jpg"
+            },
+            {
+                id: 14,
+                title: "Sholay",
+                year: 1975,
+                genre: "action",
+                industry: "bollywood",
+                rating: 8.2,
+                poster: "https://m.media-amazon.com/images/M/MV5BOWQ0YTUzYzItYjI0MC00OTZmLWE1MWQtY2EzMzU2MTlmMmJjXkEyXkFqcGdeQXVyMDkwNTkwNg@@._V1_FMjpg_UX1000_.jpg"
+            },
+            {
+                id: 15,
+                title: "Gangs of Wasseypur",
+                year: 2012,
+                genre: "action",
+                industry: "bollywood",
+                rating: 8.2,
+                poster: "https://m.media-amazon.com/images/M/MV5BMTc5NjY4MjUwNF5BMl5BanBnXkFtZTgwODM3NzM5MzE@._V1_.jpg"
+            },
+            {
+                id: 16,
+                title: "PK",
+                year: 2014,
+                genre: "comedy",
+                industry: "bollywood",
+                rating: 8.1,
+                poster: "https://m.media-amazon.com/images/M/MV5BMTYzOTE2NjkxN15BMl5BanBnXkFtZTgwMDgzMTg0MzE@._V1_.jpg"
+            },
+            {
+                id: 17,
+                title: "Andhadhun",
+                year: 2018,
+                genre: "thriller",
+                industry: "bollywood",
+                rating: 8.2,
+                poster: "https://m.media-amazon.com/images/M/MV5BZWZhMjhhZmYtOTIzOC00MGYzLWI1OGYtM2ZkN2IxNTI4ZWI3XkEyXkFqcGdeQXVyNDAzNDk0MTQ@._V1_FMjpg_UX1000_.jpg"
+            },
+            {
+                id: 18,
+                title: "Dil Chahta Hai",
+                year: 2001,
+                genre: "drama",
+                industry: "bollywood",
+                rating: 8.1,
+                poster: "https://m.media-amazon.com/images/M/MV5BZTE3YTM5ZjktYjVkOC00ODZkLWE1MjQtOTJlZTI3YmY5ODBiXkEyXkFqcGdeQXVyNDUzOTQ5MjY@._V1_.jpg"
+            },
+            {
+                id: 19,
+                title: "Bajrangi Bhaijaan",
+                year: 2015,
+                genre: "drama",
+                industry: "bollywood",
+                rating: 8.0,
+                poster: "https://m.media-amazon.com/images/M/MV5BMjE1NjQ5ODc2NV5BMl5BanBnXkFtZTgwOTM5ODIxNjE@._V1_.jpg"
+            },
+            {
+                id: 20,
+                title: "Queen",
+                year: 2013,
+                genre: "comedy",
+                industry: "bollywood",
+                rating: 8.2,
+                poster: "https://m.media-amazon.com/images/M/MV5BNWYyOWRlOWItZWM5MS00ZjJkLWI0MTUtYTE3NTI5MDAwYjgyXkEyXkFqcGdeQXVyODE5NzE3OTE@._V1_.jpg"
+            },
+            {
+                id: 21,
+                title: "Dangal",
+                year: 2016,
+                genre: "drama",
+                industry: "bollywood",
+                rating: 8.4,
+                poster: "https://m.media-amazon.com/images/M/MV5BMTQ4MzQzMzM2Nl5BMl5BanBnXkFtZTgwMTQ1NzU3MDI@._V1_FMjpg_UX1000_.jpg"
+            },
+            {
+                id: 22,
+                title: "Gully Boy",
+                year: 2019,
+                genre: "drama",
+                industry: "bollywood",
+                rating: 8.1,
+                poster: "https://m.media-amazon.com/images/M/MV5BZDkzMjExOTktMzUwMS00NTMzLWJlMDQtNWQwOGMzZGVkNGYxXkEyXkFqcGdeQXVyMTA5NzIyMDY5._V1_.jpg"
+            },
+            {
+                id: 23,
+                title: "Bahubali: The Beginning",
+                year: 2015,
+                genre: "action",
+                industry: "bollywood",
+                rating: 8.1,
+                poster: "https://m.media-amazon.com/images/M/MV5BYWVlMjVhZWYtNWViNC00ODFkLTk1MmItYjU1MDY5ZDdhMTU3XkEyXkFqcGdeQXVyODIwMDI1NjM@._V1_.jpg"
+            },
+            {
+                id: 24,
+                title: "Kabhi Khushi Kabhie Gham",
+                year: 2001,
+                genre: "drama",
+                industry: "bollywood",
+                rating: 7.4,
+                poster: "https://m.media-amazon.com/images/M/MV5BOTQ5Nzc3NzAtMzZlMS00ZWJjLWIxMGMtNDU4ZTQ1NmNjMjc5XkEyXkFqcGdeQXVyODE5NzE3OTE@._V1_.jpg"
+            },
+            {
+                id: 25,
+                title: "Devdas",
+                year: 2002,
+                genre: "romance",
+                industry: "bollywood",
+                rating: 7.6,
+                poster: "https://m.media-amazon.com/images/M/MV5BY2QxMGM4Y2QtMGFmMy00ZjZkLWExMWQtMTY1YmVjNGU3NTNkXkEyXkFqcGdeQXVyNTgyNTA4MjM@._V1_.jpg"
+            },
+            {
+                id: 26,
+                title: "Barfi!",
+                year: 2012,
+                genre: "comedy",
+                industry: "bollywood",
+                rating: 8.1,
+                poster: "https://m.media-amazon.com/images/M/MV5BMTQzMTEyODY2Ml5BMl5BanBnXkFtZTgwMjA0MDUyMjE@._V1_.jpg"
+            },
+            {
+                id: 27,
+                title: "Haider",
+                year: 2014,
+                genre: "drama",
+                industry: "bollywood",
+                rating: 8.1,
+                poster: "https://m.media-amazon.com/images/M/MV5BYjRkOGQxODYtZDJlYy00ZTQ1LWJlOTgtNDhjNmYwZjlkYzJkXkEyXkFqcGdeQXVyODE5NzE3OTE@._V1_.jpg"
+            },
+            {
+                id: 28,
+                title: "Omkara",
+                year: 2006,
+                genre: "thriller",
+                industry: "bollywood",
+                rating: 8.1,
+                poster: "https://m.media-amazon.com/images/M/MV5BYjYxMzIyYjAtMzQ5YS00YmZmLWFmYzQtYjIyMDU4MmVlZDc3XkEyXkFqcGdeQXVyODE5NzE3OTE@._V1_.jpg"
+            },
+            {
+                id: 29,
+                title: "Drishyam",
+                year: 2015,
+                genre: "thriller",
+                industry: "bollywood",
+                rating: 8.2,
+                poster: "https://m.media-amazon.com/images/M/MV5BYmJhZmJlYTItZmZlOC00NDI0LWFlN2EtNzE4YmI5MjYyZDQyXkEyXkFqcGdeQXVyODE5NzE3OTE@._V1_.jpg"
+            },
+            {
+                id: 30,
+                title: "Padmaavat",
+                year: 2018,
+                genre: "drama",
+                industry: "bollywood",
+                rating: 7.0,
+                poster: "https://m.media-amazon.com/images/M/MV5BOWRiOTzjMzUtMDk3Zi00MmI0LWIwMDMtNDJhMjIwMGM1MmNhXkEyXkFqcGdeQXVyNjQ2MjQ5NzM@._V1_.jpg"
+            }
+        ];
+        
+        // DOM elements
+        const moviesGrid = document.getElementById('movies-grid');
+        const searchInput = document.getElementById('search-input');
+        const genreFilter = document.getElementById('genre-filter');
+        const industryFilter = document.getElementById('industry-filter');
+        
+        // Function to create movie poster elements
+        function createMoviePoster(movie) {
+            const poster = document.createElement('div');
+            poster.className = 'movie-poster';
+            
+            try {
+                // Try loading the image and set it as background
+                poster.style.backgroundImage = `url("${movie.poster}")`;
+                
+                // Add error handling in case the image fails to load
+                const img = new Image();
+                img.onerror = function() {
+                    // If image fails to load, show a fallback with the title
+                    poster.style.backgroundImage = 'none';
+                    poster.innerHTML = `<div class="fallback-poster">${movie.title}</div>`;
+                };
+                img.src = movie.poster;
+            } catch (e) {
+                // If there's any error, display a fallback
+                poster.innerHTML = `<div class="fallback-poster">${movie.title}</div>`;
+            }
+            
+            return poster;
+        }
+        
+        // Function to display movies based on filters
+        function displayMovies(movies) {
+            moviesGrid.innerHTML = '';
+            
+            if (movies.length === 0) {
+                moviesGrid.innerHTML = '<div class="no-results">No movies found matching your criteria</div>';
+                return;
+            }
+            
+            movies.forEach(movie => {
+                const movieCard = document.createElement('div');
+                movieCard.className = 'movie-card';
+                
+                const poster = createMoviePoster(movie);
+                
+                const movieInfo = document.createElement('div');
+                movieInfo.className = 'movie-info';
+                movieInfo.innerHTML = `
+                    <div class="movie-title">${movie.title}</div>
+                    <div class="movie-details">
+                        <span>${movie.year} • ${capitalizeFirstLetter(movie.genre)}</span>
+                        <span class="rating">★ ${movie.rating}</span>
+                    </div>
+                `;
+                
+                movieCard.appendChild(poster);
+                movieCard.appendChild(movieInfo);
+                moviesGrid.appendChild(movieCard);
+            });
+        }
+        
+        // Helper function to capitalize first letter
+        function capitalizeFirstLetter(string) {
+            return string.charAt(0).toUpperCase() + string.slice(1);
+        }
+        
+        // Filter movies based on search and filter criteria
+        function filterMovies() {
+            const searchTerm = searchInput.value.toLowerCase();
+            const genreValue = genreFilter.value;
+            const industryValue = industryFilter.value;
+            
+            let filteredMovies = moviesData.filter(movie => {
+                // Search term filter
+                const matchesSearch = movie.title.toLowerCase().includes(searchTerm);
+                
+                // Genre filter
+                const matchesGenre = genreValue === 'all' || movie.genre === genreValue;
+                
+                // Industry filter
+                const matchesIndustry = industryValue === 'all' || movie.industry === industryValue;
+                
+                return matchesSearch && matchesGenre && matchesIndustry;
+            });
+            
+            displayMovies(filteredMovies);
+        }
+        
+        // Event listeners
+        searchInput.addEventListener('input', filterMovies);
+        genreFilter.addEventListener('change', filterMovies);
+        industryFilter.addEventListener('change', filterMovies);
+        
+        // Initial display of all movies
+        displayMovies(moviesData);
+    </script>
+</body>
+</html>
