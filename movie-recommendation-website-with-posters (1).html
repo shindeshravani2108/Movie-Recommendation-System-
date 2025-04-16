@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>CineWorld - Movie Recommendations</title>
     <style>
         * {
@@ -495,16 +496,24 @@
             
             try {
                 // Try loading the image and set it as background
-                poster.style.backgroundImage = `url("${movie.poster}")`;
-                
-                // Add error handling in case the image fails to load
+                // Add crossorigin attribute to handle CORS issues
                 const img = new Image();
+                img.crossOrigin = "anonymous";
+                img.onload = function() {
+                    poster.style.backgroundImage = `url("${movie.poster}")`;
+                };
                 img.onerror = function() {
                     // If image fails to load, show a fallback with the title
-                    poster.style.backgroundImage = 'none';
                     poster.innerHTML = `<div class="fallback-poster">${movie.title}</div>`;
                 };
                 img.src = movie.poster;
+                
+                // Set a timeout in case the image takes too long to load
+                setTimeout(() => {
+                    if (!poster.style.backgroundImage) {
+                        poster.innerHTML = `<div class="fallback-poster">${movie.title}</div>`;
+                    }
+                }, 3000);
             } catch (e) {
                 // If there's any error, display a fallback
                 poster.innerHTML = `<div class="fallback-poster">${movie.title}</div>`;
@@ -576,7 +585,12 @@
         genreFilter.addEventListener('change', filterMovies);
         industryFilter.addEventListener('change', filterMovies);
         
-        // Initial display of all movies
+        // Initial display of all movies when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            displayMovies(moviesData);
+        });
+        
+        // Immediately display movies as well (for browsers that fire DOMContentLoaded before this script runs)
         displayMovies(moviesData);
     </script>
 </body>
